@@ -34,7 +34,7 @@ class HelperWindow(QWidget):
         self._layout = QVBoxLayout()
 
         self.title_label = self._create_label()
-        self.title_label.setStyleSheet("font-weight: bold")
+        self.title_label.setStyleSheet("font-weight: bold;text-decoration: underline;")
         self.artist_label = self._create_label()
         self.track_label = self._create_label()
         self.track_label.setStyleSheet("font-style: italic")
@@ -339,7 +339,7 @@ class Player:
         return previous_track
 
     def play_random(self):
-        random_start = random.choice([0.0, 0.2, 0.4, 0.6, 0.8])
+        random_start = random.choice(list(map(lambda num: num / 10, range(1, 9))) + [0.0, ])
         self.play_from(random_start)
 
     def play_from(self, start):
