@@ -8,10 +8,10 @@ import typing
 
 import pandas as pd
 import vlc
-from PyQt6.QtCore import QTimer, QObject, QSize
+from PyQt6.QtCore import QTimer, QObject, QSize, Qt
 from PyQt6.QtGui import QIcon, QIntValidator, QCloseEvent
 from PyQt6.QtWidgets import QApplication, QWidget, QGroupBox, QHBoxLayout, QVBoxLayout, QCheckBox, QLineEdit, \
-    QButtonGroup, QPushButton, QFormLayout, QLabel, QSizePolicy, QTableWidget, QTextEdit
+    QButtonGroup, QPushButton, QLabel, QSizePolicy
 
 
 class StopWatch(QTimer):
@@ -31,28 +31,36 @@ class HelperWindow(QWidget):
         self.setWindowTitle("Momo")
         self.setWindowIcon(QIcon(os.path.join('resources', 'momo.png')))
 
-        self._layout = QFormLayout()
-        self._layout.setFieldGrowthPolicy(self._layout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self._layout = QVBoxLayout()
 
-        self.title_label = QLabel("<>")
-        self.artist_label = QLabel("<>")
-        self.track_label = QLabel("<>")
-        self._layout.addRow("Title", self.title_label)
-        self._layout.addRow("Artist", self.artist_label)
-        self._layout.addRow("Track", self.track_label)
+        self.title_label = self._create_label()
+        self.title_label.setStyleSheet("font-weight: bold")
+        self.artist_label = self._create_label()
+        self.track_label = self._create_label()
+        self.track_label.setStyleSheet("font-style: italic")
+
+        self.text_font = self.artist_label.font()
+        self.title_label.setFont(self.text_font)
+        self.artist_label.setFont(self.text_font)
+        self.track_label.setFont(self.text_font)
+        self._layout.addWidget(self.title_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._layout.addWidget(self.artist_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._layout.addWidget(self.track_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.setLayout(self._layout)
+        self.setMinimumSize(640, 480)
 
-    def minimumSize(self):
-        return QSize(800, 600)
+    @staticmethod
+    def _create_label():
+        label = QLabel("<>")
+        label.setWordWrap(True)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        return label
 
-    def close(self) -> bool:
+    def closeEvent(self, a0: QCloseEvent) -> None:
+        self.parent_window.reset_helper()
         self.parent_window.window_check.setChecked(False)
-        return super().close()
-
-    def destroy(self, destroyWindow: bool = ..., destroySubWindows: bool = ...) -> None:
-        self.parent_window.window_check.setChecked(False)
-        return super(HelperWindow, self).destroy(destroyWindow, destroySubWindows)
+        return super(HelperWindow, self).closeEvent(a0)
 
 
 class ControllerWindow(QWidget):
@@ -77,6 +85,7 @@ class ControllerWindow(QWidget):
         self._layout.addWidget(self.timebox)
         self._layout.addWidget(self.button_group)
         self.setLayout(self._layout)
+        self.setMinimumSize(800, 600)
 
     def closeEvent(self, a0: QCloseEvent) -> None:
         self.helper_window.close()
@@ -108,23 +117,40 @@ class ControllerWindow(QWidget):
         self.track_check.setEnabled(False)
         self.track_check.stateChanged.connect(self._show_track)
         box.addWidget(self.track_check)
+        self.helper_font_size = QLineEdit()
+        self.helper_font_size.setValidator(QIntValidator())
+        self.helper_font_size.setMaxLength(3)
+        self.helper_font_size.setEnabled(False)
+        self.helper_font_size.textChanged.connect(self._change_helper_font_size)
+        self.helper_font_size.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        box.addWidget(self.helper_font_size)
+        box.addWidget(QLabel("Font size"))
 
         group.setLayout(box)
         return group
 
+    def _change_helper_font_size(self, text):
+        if text.strip() != '':
+            font = self.helper_window.text_font
+            font.setPointSize(int(text))
+            self.helper_window.text_font = font
+            self.helper_window.title_label.setFont(self.helper_window.text_font)
+            self.helper_window.artist_label.setFont(self.helper_window.text_font)
+            self.helper_window.track_label.setFont(self.helper_window.text_font)
+
     def _prepare_infobox(self):
         group = QGroupBox("Info")
-        box = QFormLayout()
+        box = QVBoxLayout()
+        self.filename = QLabel("<>")
         self.title_label = QLabel("<>")
-        self.title_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        self.title_label.setStyleSheet("font-weight: bold")
         self.artist_label = QLabel("<>")
-        self.artist_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        self.artist_label.setWordWrap(True)
         self.track_label = QLabel("<>")
-        self.track_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        box.addRow("Title", self.title_label)
-        box.addRow("Artist", self.artist_label)
-        box.addRow("Track", self.track_label)
+        self.track_label.setStyleSheet("font-style: italic")
+        box.addWidget(self.filename, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
+        box.addWidget(self.title_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
+        box.addWidget(self.artist_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
+        box.addWidget(self.track_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
         group.setLayout(box)
         return group
 
@@ -135,6 +161,7 @@ class ControllerWindow(QWidget):
         self.time_input = QLineEdit("30")
         self.time_input.setValidator(QIntValidator())
         self.time_input.setMaxLength(2)
+        self.time_input.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         box.addWidget(self.time_input)
 
         self.timer = QTimer()
@@ -190,6 +217,7 @@ class ControllerWindow(QWidget):
     def _get_and_set_track_info(self, track):
         track_info = self.library_handler.library.loc[track]
         self.logger.debug(f"TRACK INFO: {track_info}")
+        self.filename.setText(track)
         self.title_label.setText(track_info['anime'])
         self.artist_label.setText(track_info['artist'])
         self.track_label.setText(track_info['title'])
@@ -204,15 +232,17 @@ class ControllerWindow(QWidget):
         self.player.set_file(track)
 
     def _next(self):
-        self._reset_helper()
+        self.reset_helper()
         track = self.player.next()
+        self.timer.stop()
         if track is not None:
             self._set_track(track)
             self._get_and_set_track_info(track)
 
     def _prev(self):
-        self._reset_helper()
+        self.reset_helper()
         track = self.player.previous()
+        self.timer.stop()
         if track is not None:
             self._set_track(track)
             self._get_and_set_track_info(track)
@@ -220,7 +250,7 @@ class ControllerWindow(QWidget):
     def _pause(self):
         self.player.pause()
 
-    def _reset_helper(self):
+    def reset_helper(self):
         self.title_check.setChecked(False)
         self.artist_check.setChecked(False)
         self.track_check.setChecked(False)
@@ -230,12 +260,16 @@ class ControllerWindow(QWidget):
             self.title_check.setEnabled(True)
             self.artist_check.setEnabled(True)
             self.track_check.setEnabled(True)
+            self.helper_font_size.setEnabled(True)
+            self.helper_font_size.setText(str(self.helper_window.text_font.pointSize()))
             self._set_track_info_helper("", "", "")
             self.helper_window.show()
         else:
             self.title_check.setEnabled(False)
             self.artist_check.setEnabled(False)
             self.track_check.setEnabled(False)
+            self.helper_font_size.setEnabled(False)
+            self.helper_font_size.setText("")
             self.helper_window.close()
 
     def _show_title(self):
