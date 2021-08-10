@@ -309,7 +309,7 @@ class Player:
         self.logger = logging.getLogger(type(self).__name__)
 
     def set_file(self, track):
-        media = self.instance.media_new(track)
+        media = self.instance.media_new(os.path.join(self.directory, track))
         self.logger.info(f'MEDIA SET:{track}')
         self.media_player.set_media(media)
         media.parse()
