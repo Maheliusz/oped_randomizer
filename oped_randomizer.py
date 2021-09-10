@@ -12,6 +12,7 @@ from PyQt6.QtCore import QTimer, QObject, QSize, Qt
 from PyQt6.QtGui import QIcon, QIntValidator, QCloseEvent
 from PyQt6.QtWidgets import QApplication, QWidget, QGroupBox, QHBoxLayout, QVBoxLayout, QCheckBox, QLineEdit, \
     QButtonGroup, QPushButton, QLabel, QSizePolicy
+from eyed3 import mp3
 
 
 class StopWatch(QTimer):
@@ -125,6 +126,10 @@ class ControllerWindow(QWidget):
         self.helper_font_size.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         box.addWidget(self.helper_font_size)
         box.addWidget(QLabel("Font size"))
+        self.show_all_button = QPushButton("Show All")
+        self.show_all_button.setEnabled(False)
+        self.show_all_button.pressed.connect(self._show_all)
+        box.addWidget(self.show_all_button)
 
         group.setLayout(box)
         return group
@@ -261,6 +266,7 @@ class ControllerWindow(QWidget):
             self.artist_check.setEnabled(True)
             self.track_check.setEnabled(True)
             self.helper_font_size.setEnabled(True)
+            self.show_all_button.setEnabled(True)
             self.helper_font_size.setText(str(self.helper_window.text_font.pointSize()))
             self._set_track_info_helper("", "", "")
             self.helper_window.show()
@@ -269,6 +275,7 @@ class ControllerWindow(QWidget):
             self.artist_check.setEnabled(False)
             self.track_check.setEnabled(False)
             self.helper_font_size.setEnabled(False)
+            self.show_all_button.setEnabled(False)
             self.helper_font_size.setText("")
             self.helper_window.close()
 
@@ -295,6 +302,11 @@ class ControllerWindow(QWidget):
         else:
             self._set_track_info_helper(self.helper_window.title_label.text(), self.helper_window.artist_label.text(),
                                         "")
+
+    def _show_all(self):
+        self.title_check.setChecked(True)
+        self.track_check.setChecked(True)
+        self.artist_check.setChecked(True)
 
 
 class Player:
@@ -360,7 +372,7 @@ class LibraryHandler:
         self.logger = logging.getLogger(type(self).__name__)
         self.directory = directory
         audio_files = [x for x in os.listdir(directory) if x.endswith('.mp3')]
-        library = pd.read_csv(os.path.join(directory, '_library.csv'), encoding='utf-8').dropna()
+        library = self._read_library(directory, audio_files)
         self.library = library[library['anime'] != 'pass'].set_index('filename')
         self.logger.info(f'LIBRARY SIZE: {self.library.count()}')
         self.used = self._get_used(directory)
@@ -380,6 +392,17 @@ class LibraryHandler:
         with open(os.path.join(self.directory, '_used.txt'), 'w', encoding='utf-8') as usedfile:
             self.logger.info(f'WRITING {len(self.used)} ENTRIES TO USED')
             usedfile.write("\n".join(self.used))
+
+    def _read_library(self, directory, audio_files):
+        try:
+            return pd.read_csv(os.path.join(directory, '_library.csv'), encoding='utf-8').dropna()
+        except FileNotFoundError:
+            self.logger.warning("'_library.csv' FILE NOT FOUND: fallback to metadata from files")
+            paths = [(name, os.path.join(directory, name)) for name in audio_files]
+            return pd.DataFrame(
+                [(x[0], mp3.Mp3AudioFile(x[1]).tag.artist, mp3.Mp3AudioFile(x[1]).tag.title,
+                  '.'.join(x[0].split('.')[:-1]), 1) for x in paths],
+                columns=['filename', 'artist', 'title', 'anime', 'pick'])
 
 
 class Application:
