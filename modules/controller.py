@@ -2,9 +2,9 @@ import logging
 import os
 
 from PyQt6.QtCore import QSize, QTimer, Qt
-from PyQt6.QtGui import QIcon, QCloseEvent, QIntValidator
+from PyQt6.QtGui import QIcon, QCloseEvent, QIntValidator, QAction
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QHBoxLayout, QCheckBox, QLineEdit, QSizePolicy, QLabel, \
-    QPushButton, QButtonGroup
+    QPushButton, QButtonGroup, QMenu, QMenuBar, QFileDialog
 
 from modules.helper import HelperWindow
 
@@ -24,10 +24,13 @@ class ControllerWindow(QWidget):
         self.library_handler = library_handler
 
         self._layout = QVBoxLayout()
+        self.menu_bar = self._prepare_menus()
         self.helper_windows_group = self._prepare_helper_windows_group()
         self.timebox = self._prepare_timebox()
         self.infobox = self._prepare_infobox()
         self.button_group = self._prepare_buttons()
+
+        self._layout.setMenuBar(self.menu_bar)
         self._layout.addWidget(self.helper_windows_group)
         self._layout.addWidget(self.infobox, 1)
         self._layout.addWidget(self.timebox)
@@ -41,6 +44,26 @@ class ControllerWindow(QWidget):
 
     def minimumSizeHint(self):
         return QSize(800, 600)
+
+    def _prepare_menus(self):
+        menu_bar = QMenuBar()
+        self.menu = QMenu("Menu")
+
+        self.menu.addAction("Open", self._open_directory)
+        self.menu.addSeparator()
+        self.menu.addAction("Exit", self.close)
+
+        menu_bar.addMenu(self.menu)
+        return menu_bar
+
+    def _open_directory(self):
+        dialog = QFileDialog()
+        dialog.setFileMode(QFileDialog.FileMode.Directory)
+        path = dialog.getExistingDirectory()
+        self.directory = path
+        self.library_handler.__init__(path)
+        self.player.__init__(self.library_handler.audio_files, self.library_handler.used, self.directory)
+
 
     def _prepare_helper_windows_group(self):
         group = QGroupBox("Helper Window")
