@@ -15,7 +15,7 @@ class ControllerWindow(QWidget):
         self.directory = directory
         self.logger = logging.getLogger(type(self).__name__)
         self.setWindowTitle("Shami")
-        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'resources', 'shami.png')))
+        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'shami.png')))
 
         self.no_used = do_not_write_used
 

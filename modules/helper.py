@@ -12,7 +12,7 @@ class HelperWindow(QWidget):
         self.parent_window = parent_window
         self.logger = logging.getLogger(type(self).__name__)
         self.setWindowTitle("Momo")
-        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'resources', 'momo.png')))
+        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'momo.png')))
 
         self._layout = QVBoxLayout()
 
