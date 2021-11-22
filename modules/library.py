@@ -2,7 +2,8 @@ import logging
 import os
 
 import pandas as pd
-from eyed3 import mp3
+from PyQt6.QtCore import QUrl
+from PyQt6.QtMultimedia import QMediaPlayer, QMediaMetaData
 
 
 class LibraryHandler:
@@ -37,8 +38,19 @@ class LibraryHandler:
             return pd.read_csv(os.path.join(directory, '_library.csv'), encoding='utf-8').dropna()
         except FileNotFoundError:
             self.logger.warning("'_library.csv' FILE NOT FOUND: fallback to metadata from files")
-            paths = [(name, os.path.join(directory, name)) for name in audio_files]
-            return pd.DataFrame(
-                [(x[0], mp3.Mp3AudioFile(x[1]).tag.artist, mp3.Mp3AudioFile(x[1]).tag.title,
-                  '.'.join(x[0].split('.')[:-1]), 1) for x in paths],
-                columns=['filename', 'artist', 'title', 'anime', 'pick'])
+            tmp_player = QMediaPlayer()
+            data = []
+            for name in audio_files:
+                tmp_player.setSource(QUrl.fromLocalFile(os.path.join(directory, name)))
+                data.append(
+                    (
+                        name,
+                        tmp_player.metaData().value(QMediaMetaData.Key.Author),
+                        tmp_player.metaData().value(QMediaMetaData.Key.Title),
+                        '.'.join(name.split('.')[:-1]),
+                        1
+                    )
+                )
+
+            return pd.DataFrame(data,
+                                columns=['filename', 'artist', 'title', 'anime', 'pick'])

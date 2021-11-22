@@ -2,7 +2,7 @@ import logging
 import os
 
 from PyQt6.QtCore import QSize, QTimer, Qt
-from PyQt6.QtGui import QIcon, QCloseEvent, QIntValidator, QAction
+from PyQt6.QtGui import QIcon, QCloseEvent, QIntValidator
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QHBoxLayout, QCheckBox, QLineEdit, QSizePolicy, QLabel, \
     QPushButton, QButtonGroup, QMenu, QMenuBar, QFileDialog
 
@@ -63,7 +63,6 @@ class ControllerWindow(QWidget):
         self.directory = path
         self.library_handler.__init__(path)
         self.player.__init__(self.library_handler.audio_files, self.library_handler.used, self.directory)
-
 
     def _prepare_helper_windows_group(self):
         group = QGroupBox("Helper Window")
