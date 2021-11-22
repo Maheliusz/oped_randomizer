@@ -49,14 +49,9 @@ class ControllerWindow(QWidget):
         menu_bar = QMenuBar()
         self.menu = QMenu("Menu")
 
-        open_action = QAction("Open")
-        open_action.triggered.connect(self._open_directory)
-        exit_action = QAction("Exit")
-        exit_action.triggered.connect(self.close)
-
-        self.menu.addAction(open_action)
+        self.menu.addAction("Open", self._open_directory)
         self.menu.addSeparator()
-        self.menu.addAction(exit_action)
+        self.menu.addAction("Exit", self.close)
 
         menu_bar.addMenu(self.menu)
         return menu_bar
@@ -64,6 +59,10 @@ class ControllerWindow(QWidget):
     def _open_directory(self):
         dialog = QFileDialog()
         dialog.setFileMode(QFileDialog.FileMode.Directory)
+        path = dialog.getExistingDirectory()
+        self.directory = path
+        self.library_handler.__init__(path)
+        self.player.__init__(self.library_handler.audio_files, self.library_handler.used, self.directory)
 
 
     def _prepare_helper_windows_group(self):
