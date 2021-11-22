@@ -7,9 +7,9 @@ import sys
 import typing
 
 import pandas as pd
-import vlc
-from PyQt6.QtCore import QTimer, QObject, QSize, Qt
+from PyQt6.QtCore import QTimer, QObject, QSize, Qt, QUrl
 from PyQt6.QtGui import QIcon, QIntValidator, QCloseEvent
+from PyQt6.QtMultimedia import QMediaPlayer, QMediaMetaData, QAudioOutput
 from PyQt6.QtWidgets import QApplication, QWidget, QGroupBox, QHBoxLayout, QVBoxLayout, QCheckBox, QLineEdit, \
     QButtonGroup, QPushButton, QLabel, QSizePolicy
 from eyed3 import mp3
@@ -181,8 +181,7 @@ class ControllerWindow(QWidget):
         return group
 
     def _final_timer_event(self):
-        if self.player.media_player.get_state() == vlc.State.Playing:
-            self.player.pause()
+        self.player.pause()
 
     def _second_timer_event(self):
         pass
@@ -253,7 +252,7 @@ class ControllerWindow(QWidget):
             self._get_and_set_track_info(track)
 
     def _pause(self):
-        self.player.pause()
+        self.player.pause_unpause()
 
     def reset_helper(self):
         self.title_check.setChecked(False)
@@ -316,15 +315,16 @@ class Player:
         self.used = used
         self.index = len(used)
 
-        self.instance = vlc.Instance()
-        self.media_player = self.instance.media_player_new()
+        self.media_player = QMediaPlayer()
+        self.audio_output = QAudioOutput()
+        self.media_player.setAudioOutput(self.audio_output)
+        self.audio_output.setVolume(100)
+
         self.logger = logging.getLogger(type(self).__name__)
 
     def set_file(self, track):
-        media = self.instance.media_new(os.path.join(self.directory, track))
+        self.media_player.setSource(QUrl.fromLocalFile(os.path.join(self.directory, track)))
         self.logger.info(f'MEDIA SET:{track}')
-        self.media_player.set_media(media)
-        media.parse()
 
     def next(self):
         self.index = self.index + 1 if len(self.audio_files) > 0 or self.index < len(self.used) else self.index
@@ -355,15 +355,18 @@ class Player:
         self.play_from(random_start)
 
     def play_from(self, start):
-        self.media_player.play()
-        self.media_player.audio_set_mute(True)
-        self.media_player.pause()
-        self.media_player.set_position(start)
-        self.media_player.audio_set_mute(False)
+        self.media_player.setPosition(int(start * self.media_player.metaData().value(QMediaMetaData.Key.Duration)))
         self.media_player.play()
 
+    def pause_unpause(self):
+        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.media_player.pause()
+        elif self.media_player.playbackState() == QMediaPlayer.PlaybackState.PausedState:
+            self.media_player.play()
+
     def pause(self):
-        self.media_player.pause()
+        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.media_player.pause()
 
 
 class LibraryHandler:
