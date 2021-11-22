@@ -1,3 +1,2 @@
 pandas
 pyqt6
-python-vlc
