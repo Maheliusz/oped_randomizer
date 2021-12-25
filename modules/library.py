@@ -9,35 +9,40 @@ from PyQt6.QtMultimedia import QMediaPlayer, QMediaMetaData
 class LibraryHandler:
     def __init__(self, directory):
         super().__init__()
-        self.logger = logging.getLogger(type(self).__name__)
         self.directory = directory
+        self.used = self._get_used(directory)
+
         audio_files = [x for x in os.listdir(directory) if x.endswith('.mp3')]
         library = self._read_library(directory, audio_files)
         self.library = library[library['anime'] != 'pass'].set_index('filename')
-        self.logger.info(f'LIBRARY SIZE: {self.library.count()}')
-        self.used = self._get_used(directory)
-        self.audio_files = [x for x in audio_files if x in list(self.library.index) and x not in self.used]
-        self.logger.info(f'AUDIO FILES: {len(self.audio_files)}')
+        logging.info(f'LIBRARY SIZE: {self.library.count()}')
+
+        self.audio_files = [x for x in audio_files if x in self.library.index and x not in self.used]
+        logging.info(f'AUDIO FILES: {len(self.audio_files)}')
+
+    def __getitem__(self, item):
+        return self.library.loc[item]
 
     def _get_used(self, directory):
         try:
             used = list(open(os.path.join(directory, '_used.txt'), encoding='utf-8').read().splitlines())
-            self.logger.info(f'FOUND {len(used)} USED ENTRIES')
+            logging.info(f'FOUND {len(used)} USED ENTRIES')
             return used
         except:
-            self.logger.warning("USED NOT FOUND")
+            logging.warning("USED NOT FOUND")
             return []
 
     def write_used(self):
         with open(os.path.join(self.directory, '_used.txt'), 'w', encoding='utf-8') as usedfile:
-            self.logger.info(f'WRITING {len(self.used)} ENTRIES TO USED')
+            logging.info(f'WRITING {len(self.used)} ENTRIES TO USED')
             usedfile.write("\n".join(self.used))
 
     def _read_library(self, directory, audio_files):
         try:
-            return pd.read_csv(os.path.join(directory, '_library.csv'), encoding='utf-8').dropna()
+            return pd.read_csv(os.path.join(directory, '_library.csv'), encoding='utf-8') \
+                [['filename', 'artist', 'title', 'anime', 'take']].dropna()
         except FileNotFoundError:
-            self.logger.warning("'_library.csv' FILE NOT FOUND: fallback to metadata from files")
+            logging.warning("'_library.csv' FILE NOT FOUND: fallback to metadata from files")
             tmp_player = QMediaPlayer()
             data = []
             for name in audio_files:
@@ -53,4 +58,4 @@ class LibraryHandler:
                 )
 
             return pd.DataFrame(data,
-                                columns=['filename', 'artist', 'title', 'anime', 'pick'])
+                                columns=['filename', 'artist', 'title', 'anime', 'take'])

@@ -13,7 +13,6 @@ class ControllerWindow(QWidget):
     def __init__(self, directory, player, library_handler, do_not_write_used):
         super().__init__()
         self.directory = directory
-        self.logger = logging.getLogger(type(self).__name__)
         self.setWindowTitle("Shami")
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'shami.png')))
 
@@ -189,8 +188,8 @@ class ControllerWindow(QWidget):
             self.player.play_from(0.0)
 
     def _get_and_set_track_info(self, track):
-        track_info = self.library_handler.library.loc[track]
-        self.logger.debug(f"TRACK INFO: {track_info}")
+        track_info = self.library_handler[track]
+        logging.debug(f"TRACK INFO: {track_info}")
         self.filename.setText(track)
         self.title_label.setText(track_info['anime'])
         self.artist_label.setText(track_info['artist'])
@@ -202,7 +201,7 @@ class ControllerWindow(QWidget):
         self.helper_window.track_label.setText(track)
 
     def _set_track(self, track):
-        self.logger.debug(f"TRACK: {track}")
+        logging.debug(f"TRACK: {track}")
         self.player.set_file(track)
 
     def _next(self):

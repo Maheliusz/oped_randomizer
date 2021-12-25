@@ -18,11 +18,9 @@ class Player:
         self.media_player.setAudioOutput(self.audio_output)
         self.audio_output.setVolume(100)
 
-        self.logger = logging.getLogger(type(self).__name__)
-
     def set_file(self, track):
         self.media_player.setSource(QUrl.fromLocalFile(os.path.join(self.directory, track)))
-        self.logger.info(f'MEDIA SET:{track}')
+        logging.info(f'MEDIA SET:{track}')
 
     def next(self):
         self.index = self.index + 1 if len(self.audio_files) > 0 or self.index < len(self.used) else self.index
@@ -30,21 +28,21 @@ class Player:
             next_track = self.used[self.index]
         except IndexError:
             if len(self.audio_files) == 0:
-                self.logger.warning('NO NEXT TRACKS')
+                logging.warning('NO NEXT TRACKS')
                 return None
             next_track = random.choice(self.audio_files)
             self.audio_files.remove(next_track)
             self.used.append(next_track)
-        self.logger.info(f'NEXT TRACK:{next_track}')
+        logging.info(f'NEXT TRACK:{next_track}')
         return next_track
 
     def previous(self):
         self.index = self.index - 1 if self.index > 0 else self.index
         try:
             previous_track = self.used[self.index]
-            self.logger.info(f'PREVIOUS TRACK:{previous_track}')
+            logging.info(f'PREVIOUS TRACK:{previous_track}')
         except IndexError:
-            self.logger.warning('NO PREVIOUS TRACKS')
+            logging.warning('NO PREVIOUS TRACKS')
             return None
         return previous_track
 

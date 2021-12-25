@@ -1,4 +1,3 @@
-import logging
 import os
 
 from PyQt6.QtCore import Qt
@@ -10,7 +9,6 @@ class HelperWindow(QWidget):
     def __init__(self, parent_window):
         super().__init__()
         self.parent_window = parent_window
-        self.logger = logging.getLogger(type(self).__name__)
         self.setWindowTitle("Momo")
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'momo.png')))
 

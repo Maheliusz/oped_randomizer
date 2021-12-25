@@ -39,6 +39,7 @@ if __name__ == "__main__":
         'error': logging.ERROR,
         'critical': logging.CRITICAL
     }[args.log])
+
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     if args.logfile:
         now = datetime.datetime.now()
