@@ -59,9 +59,10 @@ class ControllerWindow(QWidget):
         dialog = QFileDialog()
         dialog.setFileMode(QFileDialog.FileMode.Directory)
         path = dialog.getExistingDirectory()
-        self.directory = path
-        self.library_handler.__init__(path)
-        self.player.__init__(self.library_handler.audio_files, self.library_handler.used, self.directory)
+        if path is not None and path.strip() != '':
+            self.directory = path
+            self.library_handler.__init__(path)
+            self.player.__init__(self.library_handler.audio_files, self.library_handler.used, self.directory)
 
     def _prepare_helper_windows_group(self):
         group = QGroupBox("Helper Window")
