@@ -12,6 +12,7 @@ class Player:
         self.audio_files = audio_files
         self.used = used
         self.index = len(used)
+        self.currently_played = None
 
         self.media_player = QMediaPlayer()
         self.audio_output = QAudioOutput()
@@ -23,27 +24,26 @@ class Player:
         logging.info(f'MEDIA SET:{track}')
 
     def next(self):
-        self.index = self.index + 1 if len(self.audio_files) > 0 or self.index < len(self.used) else self.index
         try:
+            self.index = self.index + 1 if len(self.audio_files) > 0 or self.index < len(self.used) else self.index
             next_track = self.used[self.index]
         except IndexError:
             if len(self.audio_files) == 0:
                 logging.warning('NO NEXT TRACKS')
                 return None
             next_track = random.choice(self.audio_files)
-            self.audio_files.remove(next_track)
-            self.used.append(next_track)
         logging.info(f'NEXT TRACK:{next_track}')
+        self.currently_played = next_track
         return next_track
 
     def previous(self):
-        self.index = self.index - 1 if self.index > 0 else self.index
         try:
+            self.index = self.index - 1 if self.index > 0 else self.index
             previous_track = self.used[self.index]
             logging.info(f'PREVIOUS TRACK:{previous_track}')
         except IndexError:
             logging.warning('NO PREVIOUS TRACKS')
-            return None
+            previous_track = None
         return previous_track
 
     def play_random(self):
@@ -51,6 +51,9 @@ class Player:
         self.play_from(random_start)
 
     def play_from(self, start):
+        if self.currently_played in self.audio_files:
+            self.audio_files.remove(self.currently_played)
+            self.used.append(self.currently_played)
         if not self.media_player.source().isEmpty():
             self.media_player.setPosition(int(start * self.media_player.metaData().value(QMediaMetaData.Key.Duration)))
             self.media_player.play()
