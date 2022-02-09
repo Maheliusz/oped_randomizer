@@ -2,7 +2,7 @@ import os
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QCloseEvent
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QGroupBox, QHBoxLayout
 
 
 class HelperWindow(QWidget):
@@ -20,13 +20,18 @@ class HelperWindow(QWidget):
         self.track_label = self._create_label()
         self.track_label.setStyleSheet("font-style: italic")
 
-        self.text_font = self.artist_label.font()
-        self.title_label.setFont(self.text_font)
-        self.artist_label.setFont(self.text_font)
-        self.track_label.setFont(self.text_font)
-        self._layout.addWidget(self.title_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._layout.addWidget(self.artist_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._layout.addWidget(self.track_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._layout.addWidget(self.title_label, stretch=3, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._layout.addWidget(self.artist_label, stretch=3, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._layout.addWidget(self.track_label, stretch=3, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.info_group = QGroupBox()
+        self._info_group_layout = QHBoxLayout()
+        self.time_label = self._create_label()
+        self.track_count_label = self._create_label()
+        self._info_group_layout.addWidget(self.time_label, stretch=1, alignment=Qt.AlignmentFlag.AlignLeft)
+        self._info_group_layout.addWidget(self.track_count_label, stretch=1, alignment=Qt.AlignmentFlag.AlignRight)
+        self.info_group.setLayout(self._info_group_layout)
+        self._layout.addWidget(self.info_group)
 
         self.setLayout(self._layout)
         self.setMinimumSize(640, 480)

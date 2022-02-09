@@ -1,4 +1,5 @@
 import logging
+import math
 import os
 
 from PyQt6.QtCore import QSize, QTimer, Qt
@@ -93,6 +94,7 @@ class ControllerWindow(QWidget):
         self.helper_font_size.setEnabled(False)
         self.helper_font_size.textChanged.connect(self._change_helper_font_size)
         self.helper_font_size.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        self.helper_font_size.setText('30')
         box.addWidget(self.helper_font_size)
         box.addWidget(QLabel("Font size"))
         self.show_all_button = QPushButton("Show All")
@@ -105,12 +107,18 @@ class ControllerWindow(QWidget):
 
     def _change_helper_font_size(self, text):
         if text.strip() != '':
-            font = self.helper_window.text_font
-            font.setPointSize(int(text))
-            self.helper_window.text_font = font
-            self.helper_window.title_label.setFont(self.helper_window.text_font)
-            self.helper_window.artist_label.setFont(self.helper_window.text_font)
-            self.helper_window.track_label.setFont(self.helper_window.text_font)
+            self._change_label_font_size(self.helper_window.title_label, text)
+            self._change_label_font_size(self.helper_window.artist_label, text)
+            self._change_label_font_size(self.helper_window.artist_label, text)
+            self._change_label_font_size(self.helper_window.track_label, text)
+            self._change_label_font_size(self.helper_window.time_label, text, 3)
+            self._change_label_font_size(self.helper_window.track_count_label, text, 3)
+            logging.debug(text)
+
+    def _change_label_font_size(self, label, size_string, div_modifier=1):
+        font = label.font()
+        font.setPointSize(math.ceil(int(size_string) / div_modifier))
+        label.setFont(font)
 
     def _prepare_infobox(self):
         group = QGroupBox("Info")
@@ -230,13 +238,13 @@ class ControllerWindow(QWidget):
         self.track_check.setChecked(False)
 
     def _show_helper(self):
+        self._change_helper_font_size(self.helper_font_size.text())
         if self.window_check.isChecked():
             self.title_check.setEnabled(True)
             self.artist_check.setEnabled(True)
             self.track_check.setEnabled(True)
             self.helper_font_size.setEnabled(True)
             self.show_all_button.setEnabled(True)
-            self.helper_font_size.setText(str(self.helper_window.text_font.pointSize()))
             self._set_track_info_helper("", "", "")
             self.helper_window.show()
         else:
