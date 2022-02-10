@@ -219,9 +219,9 @@ class ControllerWindow(QWidget):
 
     def _update_track_counter(self):
         index, total = self.player.get_index_and_total()
-        self.song_counter.setText(f"{index}/{total}")
+        self.song_counter.setText(f"{index+1}/{total}")
         if self.window_check.isChecked():
-            self.helper_window.track_count_label.setText(f"{index}/{total}")
+            self.helper_window.track_count_label.setText(f"{index+1}/{total}")
 
     def _next(self):
         self.reset_helper()
@@ -258,6 +258,7 @@ class ControllerWindow(QWidget):
             self.helper_font_size.setEnabled(True)
             self.show_all_button.setEnabled(True)
             self._set_track_info_helper("", "", "")
+            self._update_track_counter()
             self.helper_window.show()
         else:
             self.title_check.setEnabled(False)
