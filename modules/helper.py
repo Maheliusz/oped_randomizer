@@ -26,7 +26,7 @@ class HelperWindow(QWidget):
 
         self.info_group = QGroupBox()
         self._info_group_layout = QHBoxLayout()
-        self.time_label = self._create_label()
+        self.time_label = self._create_label('0')
         self.track_count_label = self._create_label()
         self._info_group_layout.addWidget(self.time_label, stretch=1, alignment=Qt.AlignmentFlag.AlignLeft)
         self._info_group_layout.addWidget(self.track_count_label, stretch=1, alignment=Qt.AlignmentFlag.AlignRight)
@@ -37,8 +37,8 @@ class HelperWindow(QWidget):
         self.setMinimumSize(640, 480)
 
     @staticmethod
-    def _create_label():
-        label = QLabel("<>")
+    def _create_label(label_text='<>'):
+        label = QLabel(label_text)
         label.setWordWrap(True)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         return label

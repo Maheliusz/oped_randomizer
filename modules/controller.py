@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QHBoxLayout, QCheck
     QPushButton, QButtonGroup, QMenu, QMenuBar, QFileDialog
 
 from modules.helper import HelperWindow
+from modules.stop_watch import StopWatch
 
 
 class ControllerWindow(QWidget):
@@ -150,22 +151,34 @@ class ControllerWindow(QWidget):
         self.time_input.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         box.addWidget(self.time_input)
 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self._final_timer_event)
-        self.timer.setSingleShot(True)
+        self.timer = StopWatch(int(self.time_input.text()))
+        self.timer.connect_timeout_fun(self._final_timer_event)
+        self.timer.connect_tick_fun(self._tick_timer_event)
 
         self.random_sample_checkbox = QCheckBox("Random Start")
         self.random_sample_checkbox.setChecked(False)
         box.addWidget(self.random_sample_checkbox)
 
+        self.time_label = QLabel('Countdown: ')
+        box.addWidget(self.time_label)
+
+        self.time_input.textChanged.connect(self._update_timeout)
+
         group.setLayout(box)
         return group
+
+    def _update_timeout(self, new_timeout):
+        self.timer.set_time(int(new_timeout))
 
     def _final_timer_event(self):
         self.player.pause()
 
-    def _second_timer_event(self):
-        pass
+    def _tick_timer_event(self):
+        self.time_label.setText(f'Countdown: {self.timer.time}')
+        self.helper_window.time_label.setText(f'{self.timer.time}')
+
+    def _reset_time_label(self):
+        self.time_label.setText('Countdown: ')
 
     def _prepare_buttons(self):
         group = QGroupBox("Controls")
@@ -194,7 +207,7 @@ class ControllerWindow(QWidget):
     def _play(self):
         if not self.no_used:
             self.library_handler.write_used()
-        self.timer.start(1000 * int(self.time_input.text()))
+        self.timer.start()
         if self.random_sample_checkbox.isChecked():
             self.player.play_random()
         else:
@@ -219,14 +232,15 @@ class ControllerWindow(QWidget):
 
     def _update_track_counter(self):
         index, total = self.player.get_index_and_total()
-        self.song_counter.setText(f"{index+1}/{total}")
+        self.song_counter.setText(f"{index + 1}/{total}")
         if self.window_check.isChecked():
-            self.helper_window.track_count_label.setText(f"{index+1}/{total}")
+            self.helper_window.track_count_label.setText(f"{index + 1}/{total}")
 
     def _next(self):
         self.reset_helper()
         track = self.player.next()
-        self.timer.stop()
+        self.timer.reset()
+        self._reset_time_label()
         if track is not None:
             self._set_track(track)
             self._get_and_set_track_info(track)
@@ -235,13 +249,18 @@ class ControllerWindow(QWidget):
     def _prev(self):
         self.reset_helper()
         track = self.player.previous()
-        self.timer.stop()
+        self.timer.reset()
+        self._reset_time_label()
         if track is not None:
             self._set_track(track)
             self._get_and_set_track_info(track)
             self._update_track_counter()
 
     def _pause(self):
+        if self.player.is_active():
+            self.timer.stop()
+        else:
+            self.timer.start()
         self.player.pause_unpause()
 
     def reset_helper(self):
