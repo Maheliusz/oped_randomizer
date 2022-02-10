@@ -25,6 +25,8 @@ class Player:
 
     def next(self):
         try:
+            logging.debug(f'NEXT_INDEX:{self.index}')
+            self.used[self.index]
             self.index = self.index + 1 if len(self.audio_files) > 0 or self.index < len(self.used) else self.index
             next_track = self.used[self.index]
         except IndexError:
@@ -38,6 +40,7 @@ class Player:
 
     def previous(self):
         try:
+            logging.debug(f'PREV_INDEX:{self.index}')
             self.index = self.index - 1 if self.index > 0 else self.index
             previous_track = self.used[self.index]
             logging.info(f'PREVIOUS TRACK:{previous_track}')
