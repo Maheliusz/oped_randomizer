@@ -71,5 +71,8 @@ class Player:
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.pause()
 
+    def is_active(self):
+        return self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+
     def get_index_and_total(self):
         return self.index, len(self.used)+len(self.audio_files)
