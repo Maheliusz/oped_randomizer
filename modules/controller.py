@@ -114,8 +114,8 @@ class ControllerWindow(QWidget):
             self._change_label_font_size(self.helper_window.artist_label, size_string)
             self._change_label_font_size(self.helper_window.artist_label, size_string)
             self._change_label_font_size(self.helper_window.track_label, size_string)
-            self._change_label_font_size(self.helper_window.time_label, size_string, 3)
-            self._change_label_font_size(self.helper_window.track_count_label, size_string, 3)
+            self._change_label_font_size(self.helper_window.time_label, size_string)
+            self._change_label_font_size(self.helper_window.track_count_label, size_string, 2)
             logging.debug(f'HELPER FONT SIZE CHANGED TO: {size_string}')
 
     def _change_label_font_size(self, label, size_string, div_modifier=1):
@@ -169,6 +169,7 @@ class ControllerWindow(QWidget):
 
     def _update_timeout(self, new_timeout):
         self.timer.set_time(int(new_timeout))
+        self._reset_time_label()
 
     def _final_timer_event(self):
         self.player.pause()
@@ -179,6 +180,11 @@ class ControllerWindow(QWidget):
 
     def _reset_time_label(self):
         self.time_label.setText('Countdown: ')
+        if self.window_check.isChecked():
+            self._reset_helper_time_label()
+
+    def _reset_helper_time_label(self):
+        self.helper_window.time_label.setText(f'{self.timer.time}')
 
     def _prepare_buttons(self):
         group = QGroupBox("Controls")
@@ -207,6 +213,7 @@ class ControllerWindow(QWidget):
     def _play(self):
         if not self.no_used:
             self.library_handler.write_used()
+        self.timer.reset()
         self.timer.start()
         if self.random_sample_checkbox.isChecked():
             self.player.play_random()
@@ -278,6 +285,7 @@ class ControllerWindow(QWidget):
             self.show_all_button.setEnabled(True)
             self._set_track_info_helper("", "", "")
             self._update_track_counter()
+            self._reset_helper_time_label()
             self.helper_window.show()
         else:
             self.title_check.setEnabled(False)
