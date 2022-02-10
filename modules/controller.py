@@ -1,4 +1,5 @@
 import logging
+import math
 import os
 
 from PyQt6.QtCore import QSize, QTimer, Qt
@@ -36,6 +37,7 @@ class ControllerWindow(QWidget):
         self._layout.addWidget(self.button_group)
         self.setLayout(self._layout)
         self.setMinimumSize(800, 600)
+        self._update_track_counter()
 
     def closeEvent(self, a0: QCloseEvent) -> None:
         self.helper_window.close()
@@ -63,6 +65,7 @@ class ControllerWindow(QWidget):
             self.directory = path
             self.library_handler.__init__(path)
             self.player.__init__(self.library_handler.audio_files, self.library_handler.used, self.directory)
+            self._update_track_counter()
 
     def _prepare_helper_windows_group(self):
         group = QGroupBox("Helper Window")
@@ -93,6 +96,7 @@ class ControllerWindow(QWidget):
         self.helper_font_size.setEnabled(False)
         self.helper_font_size.textChanged.connect(self._change_helper_font_size)
         self.helper_font_size.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        self.helper_font_size.setText('30')
         box.addWidget(self.helper_font_size)
         box.addWidget(QLabel("Font size"))
         self.show_all_button = QPushButton("Show All")
@@ -103,28 +107,36 @@ class ControllerWindow(QWidget):
         group.setLayout(box)
         return group
 
-    def _change_helper_font_size(self, text):
-        if text.strip() != '':
-            font = self.helper_window.text_font
-            font.setPointSize(int(text))
-            self.helper_window.text_font = font
-            self.helper_window.title_label.setFont(self.helper_window.text_font)
-            self.helper_window.artist_label.setFont(self.helper_window.text_font)
-            self.helper_window.track_label.setFont(self.helper_window.text_font)
+    def _change_helper_font_size(self, size_string):
+        if size_string.strip() != '':
+            self._change_label_font_size(self.helper_window.title_label, size_string)
+            self._change_label_font_size(self.helper_window.artist_label, size_string)
+            self._change_label_font_size(self.helper_window.artist_label, size_string)
+            self._change_label_font_size(self.helper_window.track_label, size_string)
+            self._change_label_font_size(self.helper_window.time_label, size_string, 3)
+            self._change_label_font_size(self.helper_window.track_count_label, size_string, 3)
+            logging.debug(f'HELPER FONT SIZE CHANGED TO: {size_string}')
+
+    def _change_label_font_size(self, label, size_string, div_modifier=1):
+        font = label.font()
+        font.setPointSize(math.ceil(int(size_string) / div_modifier))
+        label.setFont(font)
 
     def _prepare_infobox(self):
         group = QGroupBox("Info")
         box = QVBoxLayout()
+        self.song_counter = QLabel("0/0")
         self.filename = QLabel("<>")
         self.title_label = QLabel("<>")
         self.title_label.setStyleSheet("font-weight: bold")
         self.artist_label = QLabel("<>")
         self.track_label = QLabel("<>")
         self.track_label.setStyleSheet("font-style: italic")
-        box.addWidget(self.filename, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
-        box.addWidget(self.title_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
-        box.addWidget(self.artist_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
-        box.addWidget(self.track_label, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
+        box.addWidget(self.song_counter, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
+        box.addWidget(self.filename, stretch=2, alignment=Qt.AlignmentFlag.AlignCenter)
+        box.addWidget(self.title_label, stretch=2, alignment=Qt.AlignmentFlag.AlignCenter)
+        box.addWidget(self.artist_label, stretch=2, alignment=Qt.AlignmentFlag.AlignCenter)
+        box.addWidget(self.track_label, stretch=2, alignment=Qt.AlignmentFlag.AlignCenter)
         group.setLayout(box)
         return group
 
@@ -205,6 +217,12 @@ class ControllerWindow(QWidget):
         logging.debug(f"TRACK: {track}")
         self.player.set_file(track)
 
+    def _update_track_counter(self):
+        index, total = self.player.get_index_and_total()
+        self.song_counter.setText(f"{index+1}/{total}")
+        if self.window_check.isChecked():
+            self.helper_window.track_count_label.setText(f"{index+1}/{total}")
+
     def _next(self):
         self.reset_helper()
         track = self.player.next()
@@ -212,6 +230,7 @@ class ControllerWindow(QWidget):
         if track is not None:
             self._set_track(track)
             self._get_and_set_track_info(track)
+            self._update_track_counter()
 
     def _prev(self):
         self.reset_helper()
@@ -220,6 +239,7 @@ class ControllerWindow(QWidget):
         if track is not None:
             self._set_track(track)
             self._get_and_set_track_info(track)
+            self._update_track_counter()
 
     def _pause(self):
         self.player.pause_unpause()
@@ -230,14 +250,15 @@ class ControllerWindow(QWidget):
         self.track_check.setChecked(False)
 
     def _show_helper(self):
+        self._change_helper_font_size(self.helper_font_size.text())
         if self.window_check.isChecked():
             self.title_check.setEnabled(True)
             self.artist_check.setEnabled(True)
             self.track_check.setEnabled(True)
             self.helper_font_size.setEnabled(True)
             self.show_all_button.setEnabled(True)
-            self.helper_font_size.setText(str(self.helper_window.text_font.pointSize()))
             self._set_track_info_helper("", "", "")
+            self._update_track_counter()
             self.helper_window.show()
         else:
             self.title_check.setEnabled(False)
