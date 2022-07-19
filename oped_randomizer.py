@@ -26,10 +26,14 @@ class Application:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('Application for OPED quiz')
     parser.add_argument('--dir', default=os.getcwd(), help='directory with music library')
+    parser.add_argument('--library', default='_library.csv', help='name of library file')
     parser.add_argument('--log', default='warn', choices=['debug', 'info', 'warn', 'error', 'critical'],
                         help='logging level')
-    parser.add_argument('--logfile', action='store_true', default=False)
-    parser.add_argument('--noused', action='store_true', default=False)
+    parser.add_argument('--logfile', action='store_true', default=False,
+                        help='name of file to store logs (else logs are output to console)')
+    parser.add_argument('--noused', action='store_true', default=False, help='ignore used file')
+    parser.add_argument('--all', action='store_true', default=False,
+                        help='load all entries from library, ignore "taken"')
     args = parser.parse_args()
 
     logging.basicConfig(level={
