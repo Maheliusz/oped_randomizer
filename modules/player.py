@@ -58,7 +58,7 @@ class Player:
             self.audio_files.remove(self.currently_played)
             self.used.append(self.currently_played)
         if not self.media_player.source().isEmpty():
-            self.media_player.setPosition(int(start * self.media_player.metaData().value(QMediaMetaData.Key.Duration)))
+            self.media_player.setPosition(int(start * self.media_player.duration()))
             self.media_player.play()
 
     def pause_unpause(self):
