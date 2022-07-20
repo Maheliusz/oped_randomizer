@@ -3,7 +3,7 @@ import os
 import random
 
 from PyQt6.QtCore import QUrl
-from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaMetaData
+from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 
 class Player:
