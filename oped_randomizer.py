@@ -12,9 +12,9 @@ from modules.player import Player
 
 
 class Application:
-    def __init__(self, directory, do_not_write_used):
+    def __init__(self, directory, do_not_write_used, library_filename, get_all):
         self.qapp = QApplication([])
-        self.library_parser = LibraryHandler(directory)
+        self.library_parser = LibraryHandler(directory, library_filename, get_all)
         self.player = Player(self.library_parser.audio_files, self.library_parser.used, directory)
         self.window = ControllerWindow(directory, self.player, self.library_parser, do_not_write_used)
 
@@ -52,5 +52,5 @@ if __name__ == "__main__":
         fileLogHandler.setFormatter(fileLogFormatter)
         logging.getLogger().addHandler(fileLogHandler)
 
-    app = Application(args.dir, args.noused)
+    app = Application(args.dir, args.noused, args.library, args.all)
     app.run()
