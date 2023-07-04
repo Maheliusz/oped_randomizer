@@ -145,9 +145,9 @@ class ControllerWindow(QWidget):
         group = QGroupBox("Timer")
         box = QHBoxLayout()
 
-        self.time_input = QLineEdit("30")
+        self.time_input = QLineEdit("20")
         self.time_input.setValidator(QIntValidator())
-        self.time_input.setMaxLength(2)
+        self.time_input.setMaxLength(3)
         self.time_input.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         box.addWidget(self.time_input)
 
@@ -168,6 +168,10 @@ class ControllerWindow(QWidget):
         return group
 
     def _update_timeout(self, new_timeout):
+        logging.debug(f'New timeout:\t{new_timeout}')
+        if not new_timeout:
+            new_timeout = 0
+            self.time_input.setText('0')
         self.timer.set_time(int(new_timeout))
         self._reset_time_label()
 
