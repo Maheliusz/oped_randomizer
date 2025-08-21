@@ -1,13 +1,12 @@
 import logging
 import os
 
+import eyed3
 import pandas as pd
-from PyQt6.QtCore import QUrl
-from PyQt6.QtMultimedia import QMediaPlayer, QMediaMetaData
 
 
 class LibraryHandler:
-    def __init__(self, directory, library_filename='_library.csv', get_all=False):
+    def __init__(self, directory, library_filename='_library.csv', get_all=True):
         super().__init__()
         self.directory = directory
         self.used = self._get_used(directory)
@@ -48,16 +47,15 @@ class LibraryHandler:
                 [columns_to_read].dropna()
         except:
             logging.warning("{} read failed: fallback to metadata from files".format(self.library_filename))
-            tmp_player = QMediaPlayer()
             data = []
             for name in audio_files:
-                tmp_player.setSource(QUrl.fromLocalFile(os.path.join(directory, name)))
+                audiofile = eyed3.load(os.path.join(directory, name))
                 data.append(
                     (
                         name,
-                        tmp_player.metaData().value(QMediaMetaData.Key.Author),
-                        tmp_player.metaData().value(QMediaMetaData.Key.Title),
-                        '.'.join(name.split('.')[:-1])
+                        audiofile.tag.artist,
+                        audiofile.tag.title,
+                        audiofile.tag.album
                     )
                 )
 
