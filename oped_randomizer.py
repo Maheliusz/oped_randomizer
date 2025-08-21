@@ -32,8 +32,8 @@ if __name__ == "__main__":
     parser.add_argument('--logfile', action='store_true', default=False,
                         help='name of file to store logs (else logs are output to console)')
     parser.add_argument('--noused', action='store_true', default=False, help='ignore used file')
-    parser.add_argument('--all', action='store_true', default=False,
-                        help='load all entries from library, ignore "taken"')
+    parser.add_argument('--pick', action='store_true', default=False,
+                        help='load only selected entries from library, using "taken"')
     args = parser.parse_args()
 
     logging.basicConfig(level={
